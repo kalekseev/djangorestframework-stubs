@@ -1,12 +1,17 @@
 import collections
-from typing import Any, Dict, List, Mapping, MutableMapping, Iterator
+from typing import Any, Dict, List, MutableMapping, MutableMapping, Iterator
 
 from rest_framework.exceptions import ErrorDetail
 from rest_framework.fields import Field
 from rest_framework.serializers import BaseSerializer
 
-class ReturnDict(dict):
+class ReturnDict(MutableMapping[str, Any]):
     serializer: BaseSerializer
+    def __iter__(self) -> Iterator[str]: ...
+    def __getitem__(self, key: str) -> Any: ...
+    def __len__(self) -> int: ...
+    def __setitem__(self, key: str, value: Any) -> None: ...
+    def __delitem__(self, key: str) -> None: ...
 
 class ReturnList(list):
     serializer: BaseSerializer

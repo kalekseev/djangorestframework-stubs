@@ -1,19 +1,22 @@
 import importlib
 from functools import partial
-from typing import Callable, Dict, Optional
+from typing import Callable, Dict, Optional, TYPE_CHECKING
 
-from mypy.nodes import MDEF, SymbolTableNode, TypeInfo, Var
+from mypy.nodes import MDEF, SymbolTableNode, TypeInfo, Var, Decorator, FuncDef, Block, Argument
 from mypy.options import Options
 from mypy.plugin import ClassDefContext, Plugin
 from mypy.types import Instance
 from mypy.types import Type as MypyType
-from mypy.types import TypedDictType
+from mypy.types import TypedDictType, CallableType, AnyType
 from mypy_django_plugin import main as mypy_django_main
 from mypy_django_plugin.django.context import DjangoContext
-from mypy_django_plugin.lib.helpers import add_new_class_for_module
+from mypy_django_plugin.lib.helpers import get_private_descriptor_type
 
 from mypy_drf_plugin.lib import fullnames, helpers
 from mypy_drf_plugin.transformers import serializers
+
+if TYPE_CHECKING:
+    import mypy.plugin
 
 
 def transform_serializer_class(ctx: ClassDefContext) -> None:
@@ -24,53 +27,103 @@ def transform_serializer_class(ctx: ClassDefContext) -> None:
     serializers.make_meta_nested_class_inherit_from_any(ctx)
 
 
-def redefine_and_typecheck_serializer_fields(
-    ctx: ClassDefContext, django_context: DjangoContext, base_process: bool
-) -> MypyType:
-    if base_process:
-        transform_serializer_class(ctx)
-    if not ctx.api.final_iteration:
-        ctx.api.defer()
-        return
-
+def redefine_and_typecheck_serializer_fields(ctx: ClassDefContext, django_context: DjangoContext) -> MypyType:
     module_path, klass = ctx.cls.fullname.rsplit(".", 1)
     module = importlib.import_module(module_path)
     try:
         ser = getattr(module, klass)
     except AttributeError:
         return
-    from rest_framework.serializers import ModelSerializer
+    from rest_framework.serializers import ModelSerializer, ListSerializer
 
-    if ser is ModelSerializer or not issubclass(ser, ModelSerializer) or not hasattr(ser, "Meta"):
+    if not (issubclass(ser, ModelSerializer) and hasattr(ser, "Meta")):
         return
 
     def ninit(self):
         ModelSerializer.__init__(self, instance=None)
 
-    methods = {"__init__": ninit}
-    if hasattr(ser, "Meta"):
-        methods["Meta"] = type("Meta", (ser.Meta,), {})
+    methods = {"__init__": ninit, "Meta": ser.Meta}
     FakeSerializer = type("FakeSerializer", (ser,), methods)
     fields = FakeSerializer().fields
-    required_keys = {}
+    field_types = {}
+    data_types = {}
     for name, field in fields.items():
         fmodule = ctx.api.modules[field.__module__]
         ftype = fmodule.names[field.__class__.__name__]
-        required_keys[name] = Instance(ftype.node, [])
+        field_types[name] = Instance(ftype.node, [])
+        data_types[field.source] = get_private_descriptor_type(
+            ftype.node, "_pyi_field_actual_type", is_nullable=getattr(field, "allow_null", False)
+        )
+    target_module = ctx.api.modules[module_path]
+    target_class_name = ser.__name__
+    if "fields" not in ctx.cls.info.names:
+        add_property_returning_typed_dict(ctx, field_types, "fields", target_module, target_class_name)
+    add_property_returning_typed_dict(
+        ctx,
+        data_types,
+        "data",
+        target_module,
+        target_class_name,
+        is_list=isinstance(ser, ListSerializer),
+        is_data_defined="data" in ctx.cls.info.names,
+    )
+
+
+def add_property_returning_typed_dict(
+    ctx: ClassDefContext,
+    typed_dict_keys: dict,
+    property_name: str,
+    target_module,
+    target_class_name: str,
+    is_list: bool = False,
+    is_data_defined: bool = False,
+) -> None:
     object_type = ctx.api.named_type_or_none("typing._TypedDict", [])
-    typed_dict_type = TypedDictType(required_keys, required_keys=set(), fallback=object_type)
-    smodule = ctx.api.modules[module_path]
-    new_class = add_new_class_for_module(smodule, ser.__name__ + "Fields", [object_type], {})
-    new_class.typeddict_type = typed_dict_type
+
+    ret_type = TypedDictType(typed_dict_keys, required_keys=set(), fallback=object_type)
+    if is_list:
+        ret_type = ctx.api.named_type_or_none("typing.List", [ret_type])
 
     ser_type_info = ctx.cls.info
-    var = Var("fields", typed_dict_type)
+    var = Var(property_name)
     var.info = ser_type_info
     var.is_initialized_in_class = True
     var.is_property = True
-    var._fullname = ser_type_info.fullname() + "." + var.name()
 
-    ctx.cls.info.names["fields"] = SymbolTableNode(MDEF, var, plugin_generated=True)
+    arg_var = Var("self", None)
+    arg = Argument(arg_var, type_annotation=None, initializer=None, kind=0)
+    func = FuncDef(name=property_name, arguments=[arg], body=Block([]))
+    func.info = ser_type_info
+    func._fullname = ser_type_info.fullname() + "." + var.name()
+    func.is_property = True
+    func.is_decorated = True
+    func.type = CallableType(
+        arg_types=[AnyType(1)], arg_kinds=[0], arg_names=["self"], ret_type=ret_type, fallback=object_type
+    )
+    dec = Decorator(func=func, decorators=[], var=var)
+
+    if not is_data_defined:
+        ctx.cls.info.names[property_name] = SymbolTableNode(MDEF, dec, plugin_generated=True)
+    if property_name == "data":
+        ctx.cls.info.names["_pyi_data"] = ctx.cls.info.names[property_name]
+
+
+def handle_serializer_class(ctx: ClassDefContext, django_context: DjangoContext, base_process: bool) -> MypyType:
+    if base_process:
+        transform_serializer_class(ctx)
+    if not ctx.api.final_iteration:
+        ctx.api.defer()
+        return
+    redefine_and_typecheck_serializer_fields(ctx, django_context)
+
+
+def handle_return_type(ctx: "mypy.plugin.AnalyzeTypeContext", django_context: DjangoContext) -> MypyType:
+    func = ctx.api.visit_unbound_type(ctx.type.args[0])
+    if "_pyi_data" in func.type.names:
+        func = func.type.names["_pyi_data"]
+        if func.type:
+            return func.type.ret_type
+    return ctx.api.named_type("typing.Mapping", [])
 
 
 class NewSemanalDRFPlugin(Plugin):
@@ -100,11 +153,12 @@ class NewSemanalDRFPlugin(Plugin):
         base_process = fullname in self._get_currently_defined_serializers()
         if info:
             if info.has_base(fullnames.SERIALIZER_FULLNAME):
-                return partial(
-                    redefine_and_typecheck_serializer_fields,
-                    django_context=self.django_context,
-                    base_process=base_process,
-                )
+                return partial(handle_serializer_class, django_context=self.django_context, base_process=base_process)
+        return None
+
+    def get_type_analyze_hook(self, fullname: str) -> Optional[Callable[["mypy.plugin.AnalyzeTypeContext"], MypyType]]:
+        if fullname.endswith("types.SerializerDataType"):
+            return partial(handle_return_type, django_context=self.django_context)
         return None
 
 
