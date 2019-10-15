@@ -48,12 +48,17 @@ def redefine_and_typecheck_serializer_fields(ctx: ClassDefContext, django_contex
     field_types = {}
     data_types = {}
     for name, field in fields.items():
-        fmodule = ctx.api.modules[field.__module__]
-        ftype = fmodule.names[field.__class__.__name__]
-        field_types[name] = Instance(ftype.node, [])
-        data_types[field.source] = get_private_descriptor_type(
-            ftype.node, "_pyi_field_actual_type", is_nullable=getattr(field, "allow_null", False)
-        )
+        try:
+            fmodule = ctx.api.modules[field.__module__]
+            ftype = fmodule.names[field.__class__.__name__]
+        except KeyError:
+            field_types[name] = AnyType(1)
+            data_types[field.source] = AnyType(1)
+        else:
+            field_types[name] = Instance(ftype.node, [])
+            data_types[field.source] = get_private_descriptor_type(
+                ftype.node, "_pyi_field_actual_type", is_nullable=getattr(field, "allow_null", False)
+            )
     target_module = ctx.api.modules[module_path]
     target_class_name = ser.__name__
     if "fields" not in ctx.cls.info.names:
