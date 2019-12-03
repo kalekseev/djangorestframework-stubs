@@ -27,7 +27,7 @@ dependencies = [
 
 setup(
     name="djangorestframework-stubs",
-    version="1.0.0",
+    version="1.0.0.1",
     description="PEP-484 stubs for django-rest-framework",
     long_description=readme,
     long_description_content_type="text/markdown",
