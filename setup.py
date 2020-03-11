@@ -20,15 +20,15 @@ with open("README.md", "r") as f:
     readme = f.read()
 
 dependencies = [
-    'mypy>=0.730',
-    'django-stubs>=1.2.0',
+    'mypy>=0.750',
+    'django-stubs>=1.3.0',
     'typing-extensions'
 ]
 
 setup(
     name="djangorestframework-stubs",
-    version="1.0.0.1",
-    description="PEP-484 stubs for django-rest-framework",
+    version="1.1.0.1",
+    description='PEP-484 stubs for django-rest-framework',
     long_description=readme,
     long_description_content_type="text/markdown",
     url="https://github.com/typeddjango/djangorestframework-stubs",
