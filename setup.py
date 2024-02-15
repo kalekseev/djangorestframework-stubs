@@ -20,16 +20,13 @@ with open("README.md") as f:
     readme = f.read()
 
 dependencies = [
-    "django-stubs>=4.2.7",
+    "django-stubs-ext",
     "typing-extensions>=3.10.0",
-    "requests>=2.0.0",
     "types-requests>=0.1.12",
     "types-PyYAML>=5.4.3",
 ]
 
-# Keep compatible-mypy major.minor version pinned to what we use in CI (requirements.txt)
 extras_require = {
-    "compatible-mypy": ["mypy~=1.7.0", "django-stubs[compatible-mypy]"],
     "coreapi": ["coreapi>=2.0.0"],
     "markdown": ["types-Markdown>=0.1.5"],
 }
