@@ -19,16 +19,14 @@ with open("README.md") as f:
     readme = f.read()
 
 dependencies = [
-    "django-stubs>=5.2.0",
+    "django-stubs-ext",
     "typing-extensions>=4.0",
     "requests>=2.0",
     "types-requests",
     "types-PyYAML",
 ]
 
-# Keep compatible-mypy major.minor version pinned to what latest django-stubs release uses.
 extras_require = {
-    "compatible-mypy": ["mypy>=1.13,<1.17", "django-stubs[compatible-mypy]"],
     "coreapi": ["coreapi>=2.0.0"],
     "markdown": ["types-Markdown>=0.1.5"],
 }
