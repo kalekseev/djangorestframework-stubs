@@ -1,6 +1,6 @@
 from _typeshed import Incomplete
 from collections.abc import Callable, Iterable, Iterator, Mapping, MutableMapping, Sequence
-from typing import Any, ClassVar, Generic, Literal, NoReturn, TypeVar
+from typing import Any, ClassVar, Generic, Literal, NoReturn, TypeVar, overload
 
 from django.db import models
 from django.db.models import Manager, Model, QuerySet
@@ -193,7 +193,7 @@ class ModelSerializer(Serializer, BaseSerializer[_MT]):
     serializer_url_field: type[RelatedField]
     serializer_choice_field: type[Field]
     url_field_name: str | None
-    instance: _MT | Sequence[_MT] | None
+    instance: _MT | None
 
     class Meta:
         model: type[_MT]  # type: ignore
@@ -202,19 +202,43 @@ class ModelSerializer(Serializer, BaseSerializer[_MT]):
         exclude: Sequence[str] | None
         depth: int | None
         extra_kwargs: dict[str, dict[str, Any]]
+    @overload
     def __init__(
         self,
-        instance: None | _MT | Sequence[_MT] | QuerySet[_MT] | Manager[_MT] = ...,
+        instance: None | Sequence[_MT] | QuerySet[_MT] | Manager[_MT] = ...,
         data: Any = ...,
         *,
         partial: bool = ...,
-        many: bool = ...,
+        many: Literal[True] = ...,
         context: dict[str, Any] = ...,
         read_only: bool = ...,
         write_only: bool = ...,
         required: bool | None = None,
-        default: _MT | Sequence[_MT] | Callable[[], _MT | Sequence[_MT]] = ...,
-        initial: _MT | Sequence[_MT] | Callable[[], _MT | Sequence[_MT]] = ...,
+        default: Sequence[_MT] | Callable[[], _MT | Sequence[_MT]] = ...,
+        initial: Sequence[_MT] | Callable[[], _MT | Sequence[_MT]] = ...,
+        source: str | None = None,
+        label: StrOrPromise | None = None,
+        help_text: StrOrPromise | None = None,
+        style: dict[str, Any] | None = None,
+        error_messages: dict[str, StrOrPromise] | None = None,
+        validators: Sequence[Validator[_MT]] | None = ...,
+        allow_null: bool = ...,
+        allow_empty: bool = ...,
+    ) -> None: ...
+    @overload
+    def __init__(
+        self,
+        instance: None | _MT = ...,
+        data: Any = ...,
+        *,
+        partial: bool = ...,
+        many: Literal[False, None] = ...,
+        context: dict[str, Any] = ...,
+        read_only: bool = ...,
+        write_only: bool = ...,
+        required: bool | None = None,
+        default: _MT = ...,
+        initial: _MT = ...,
         source: str | None = None,
         label: StrOrPromise | None = None,
         help_text: StrOrPromise | None = None,
