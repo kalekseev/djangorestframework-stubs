@@ -20,6 +20,7 @@ from typing_extensions import ParamSpec, override
 _View = TypeVar("_View", bound=Callable[..., HttpResponseBase])
 _P = ParamSpec("_P")
 _RESP = TypeVar("_RESP", bound=HttpResponseBase)
+_REQ = TypeVar("_REQ", bound=Request)
 
 _MixedCaseHttpMethod: TypeAlias = Literal[
     "GET",
@@ -67,7 +68,7 @@ class ViewSetAction(Protocol[_View]):
 
 def api_view(
     http_method_names: Sequence[str] | None = ...,
-) -> Callable[[Callable[Concatenate[Request, _P], _RESP]], AsView[Callable[Concatenate[HttpRequest, _P], _RESP]]]: ...
+) -> Callable[[Callable[Concatenate[_REQ, _P], _RESP]], AsView[Callable[Concatenate[HttpRequest, _P], _RESP]]]: ...
 def renderer_classes(renderer_classes: Sequence[BaseRenderer | type[BaseRenderer]]) -> Callable[[_View], _View]: ...
 def parser_classes(parser_classes: Sequence[BaseParser | type[BaseParser]]) -> Callable[[_View], _View]: ...
 def authentication_classes(
