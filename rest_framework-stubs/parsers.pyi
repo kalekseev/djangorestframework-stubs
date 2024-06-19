@@ -1,8 +1,8 @@
 from collections.abc import Mapping
-from typing import IO, Any, Generic, TypeVar
+from typing import IO, Any, Generic, TypeVar, type_check_only
 
 from django.core.files.uploadedfile import UploadedFile
-from django.http.request import _ImmutableQueryDict
+from django.http.request import QueryDict
 from django.utils.datastructures import MultiValueDict
 from rest_framework.renderers import JSONRenderer
 from typing_extensions import override
@@ -33,13 +33,13 @@ class FormParser(BaseParser):
     @override
     def parse(
         self, stream: IO[Any], media_type: str | None = ..., parser_context: Mapping[str, Any] | None = ...
-    ) -> _ImmutableQueryDict: ...
+    ) -> QueryDict: ...
 
 class MultiPartParser(BaseParser):
     @override
     def parse(
         self, stream: IO[Any], media_type: str | None = ..., parser_context: Mapping[str, Any] | None = ...
-    ) -> DataAndFiles[_ImmutableQueryDict, MultiValueDict]: ...
+    ) -> DataAndFiles[QueryDict, MultiValueDict]: ...
 
 class FileUploadParser(BaseParser):
     errors: dict[str, str]
