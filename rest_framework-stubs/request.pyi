@@ -7,7 +7,7 @@ from typing import Any
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import AnonymousUser, _User
 from django.http import HttpRequest
-from django.http.request import _ImmutableQueryDict
+from django.http.request import QueryDict
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.authtoken.models import Token
 from rest_framework.negotiation import BaseContentNegotiation
@@ -68,7 +68,7 @@ class Request(HttpRequest):
     @property
     def stream(self) -> Any: ...
     @property
-    def query_params(self) -> _ImmutableQueryDict: ...
+    def query_params(self) -> QueryDict: ...
     @property
     def data(self) -> dict[str, Any]: ...
     @property
@@ -83,7 +83,7 @@ class Request(HttpRequest):
     def successful_authenticator(self) -> BaseAuthentication | ForcedAuthentication | None: ...
     def __getattr__(self, attr: str) -> Any: ...
     @property
-    def POST(self) -> _ImmutableQueryDict: ...  # type: ignore[override]
+    def POST(self) -> QueryDict: ...  # type: ignore[override]
     @property
     def FILES(self) -> Incomplete: ...  # type: ignore[override]
     def force_plaintext_errors(self, value: Any) -> None: ...
