@@ -26,9 +26,5 @@ rest_framework.serializers.DateField.__init__
 rest_framework.serializers.DateTimeField.__init__
 rest_framework.serializers.TimeField.__init__
 
-# Generated objects:
-rest_framework.authtoken.models.Token@AnnotatedWith
-rest_framework.authtoken.models.TokenProxy@AnnotatedWith
-
-# .save() will be different soon:
-rest_framework.authtoken.models.Token.save
+# Ignore @cached_property error "cannot reconcile @property on stub with runtime object"
+rest_framework.serializers.Serializer.fields
