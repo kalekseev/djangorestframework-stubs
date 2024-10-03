@@ -2,7 +2,7 @@ from collections.abc import Mapping
 from typing import Any, assert_type
 
 from rest_framework import serializers
-from rest_framework.fields import FloatField
+from rest_framework.fields import BigIntegerField, FloatField
 
 # case: field_get_attribute_returns_value_type
 field = serializers.CharField()
@@ -15,3 +15,6 @@ assert_type(field.context, Mapping[str, Any])
 # case: float_field_args_fields
 FloatField(min_value=1, max_value=1.0)
 FloatField(min_value=1.2, max_value=1)
+
+# case: big_integer_field_args
+BigIntegerField(coerce_to_string=True, min_value=1, max_value=10)

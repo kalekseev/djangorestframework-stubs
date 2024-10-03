@@ -1,6 +1,6 @@
 import datetime
 import uuid
-from collections.abc import Callable, Generator, Iterable, Mapping, Sequence
+from collections.abc import Callable, Generator, Iterable, Mapping, MutableMapping, Sequence
 from decimal import Decimal
 from enum import Enum
 from json import JSONDecoder, JSONEncoder
@@ -81,7 +81,7 @@ class Field(Generic[_VT, _DT, _RP, _IN]):
     default_empty_html: Any  # Any: empty sentinel or field default value
     default_error_messages: ClassVar[dict[str, StrOrPromise]]
     default_validators: Sequence[Validator[_VT]]
-    error_messages: dict[str, StrOrPromise]
+    error_messages: Mapping[str, StrOrPromise]
     field_name: str | None
     help_text: StrOrPromise | None
     initial: _VT | Callable[[], _VT] | None
@@ -105,9 +105,9 @@ class Field(Generic[_VT, _DT, _RP, _IN]):
         label: StrOrPromise | None = None,
         help_text: StrOrPromise | None = None,
         style: dict[str, Any] | None = None,
-        error_messages: dict[str, StrOrPromise] | None = None,
-        validators: Sequence[Validator[_VT]] | None = None,
-        allow_null: bool = False,
+        error_messages: Mapping[str, StrOrPromise] | None = None,
+        validators: Sequence[Validator[_VT]] | None = ...,
+        allow_null: bool = ...,
     ) -> None: ...
     @classmethod
     def __class_getitem__(cls, *args: Any, **kwargs: Any) -> type[Self]: ...
@@ -130,7 +130,7 @@ class Field(Generic[_VT, _DT, _RP, _IN]):
     @property
     def root(self) -> BaseSerializer: ...
     @property
-    def context(self) -> Mapping[str, Any]: ...
+    def context(self) -> MutableMapping[str, Any]: ...
     def __new__(cls, *args: Any, **kwargs: Any) -> Self: ...
     def __deepcopy__(self, memo: dict[int, Any]) -> Self: ...
 
@@ -165,13 +165,13 @@ class CharField(Field[str, str, str, Any]):
         label: StrOrPromise | None = None,
         help_text: StrOrPromise | None = None,
         style: dict[str, Any] | None = None,
-        error_messages: dict[str, StrOrPromise] | None = None,
-        validators: Sequence[Validator[str]] | None = None,
-        allow_null: bool = False,
-        allow_blank: bool = False,
-        trim_whitespace: bool = True,
-        max_length: int | None = None,
-        min_length: int | None = None,
+        error_messages: Mapping[str, StrOrPromise] | None = None,
+        validators: Sequence[Validator[str]] | None = ...,
+        allow_null: bool = ...,
+        allow_blank: bool = ...,
+        trim_whitespace: bool = ...,
+        max_length: int = ...,
+        min_length: int | None = ...,
     ) -> None: ...
 
 class EmailField(CharField): ...
@@ -190,13 +190,13 @@ class RegexField(CharField):
         label: StrOrPromise | None = None,
         help_text: StrOrPromise | None = None,
         style: dict[str, Any] | None = None,
-        error_messages: dict[str, StrOrPromise] | None = None,
-        validators: Sequence[Validator[str]] | None = None,
-        allow_null: bool = False,
-        allow_blank: bool = False,
-        trim_whitespace: bool = True,
-        max_length: int | None = None,
-        min_length: int | None = None,
+        error_messages: Mapping[str, StrOrPromise] | None = None,
+        validators: Sequence[Validator[str]] | None = ...,
+        allow_null: bool = ...,
+        allow_blank: bool = ...,
+        trim_whitespace: bool = ...,
+        max_length: int = ...,
+        min_length: int | None = ...,
     ) -> None: ...
 
 class SlugField(CharField):
@@ -214,13 +214,13 @@ class SlugField(CharField):
         label: StrOrPromise | None = None,
         help_text: StrOrPromise | None = None,
         style: dict[str, Any] | None = None,
-        error_messages: dict[str, StrOrPromise] | None = None,
-        validators: Sequence[Validator[str]] | None = None,
-        allow_null: bool = False,
-        allow_blank: bool = False,
-        trim_whitespace: bool = True,
-        max_length: int | None = None,
-        min_length: int | None = None,
+        error_messages: Mapping[str, StrOrPromise] | None = None,
+        validators: Sequence[Validator[str]] | None = ...,
+        allow_null: bool = ...,
+        allow_blank: bool = ...,
+        trim_whitespace: bool = ...,
+        max_length: int = ...,
+        min_length: int | None = ...,
     ) -> None: ...
 
 class URLField(CharField): ...
@@ -241,9 +241,9 @@ class UUIDField(Field[uuid.UUID, uuid.UUID | str | int, str, Any]):
         label: StrOrPromise | None = None,
         help_text: StrOrPromise | None = None,
         style: dict[str, Any] | None = None,
-        error_messages: dict[str, StrOrPromise] | None = None,
-        validators: Sequence[Validator[uuid.UUID]] | None = None,
-        allow_null: bool = False,
+        error_messages: Mapping[str, StrOrPromise] | None = None,
+        validators: Sequence[Validator[uuid.UUID]] | None = ...,
+        allow_null: bool = ...,
     ) -> None: ...
 
 class IPAddressField(CharField):
@@ -262,13 +262,13 @@ class IPAddressField(CharField):
         label: StrOrPromise | None = None,
         help_text: StrOrPromise | None = None,
         style: dict[str, Any] | None = None,
-        error_messages: dict[str, StrOrPromise] | None = None,
-        validators: Sequence[Validator[str]] | None = None,
-        allow_null: bool = False,
-        allow_blank: bool = False,
-        trim_whitespace: bool = True,
-        max_length: int | None = None,
-        min_length: int | None = None,
+        error_messages: Mapping[str, StrOrPromise] | None = None,
+        validators: Sequence[Validator[str]] | None = ...,
+        allow_null: bool = ...,
+        allow_blank: bool = ...,
+        trim_whitespace: bool = ...,
+        max_length: int = ...,
+        min_length: int | None = ...,
     ) -> None: ...
 
 class IntegerField(Field[int, float | int | str, int, Any]):
@@ -290,9 +290,9 @@ class IntegerField(Field[int, float | int | str, int, Any]):
         label: StrOrPromise | None = None,
         help_text: StrOrPromise | None = None,
         style: dict[str, Any] | None = None,
-        error_messages: dict[str, StrOrPromise] | None = None,
-        validators: Sequence[Validator[int]] | None = None,
-        allow_null: bool = False,
+        error_messages: Mapping[str, StrOrPromise] | None = None,
+        validators: Sequence[Validator[int]] | None = ...,
+        allow_null: bool = ...,
     ) -> None: ...
 
 class BigIntegerField(IntegerField):
@@ -312,9 +312,9 @@ class BigIntegerField(IntegerField):
         label: StrOrPromise | None = None,
         help_text: StrOrPromise | None = None,
         style: dict[str, Any] | None = None,
-        error_messages: dict[str, StrOrPromise] | None = None,
-        validators: Sequence[Validator[int]] | None = None,
-        allow_null: bool = False,
+        error_messages: Mapping[str, StrOrPromise] | None = None,
+        validators: Sequence[Validator[int]] | None = ...,
+        allow_null: bool = ...,
     ) -> None: ...
 
 class FloatField(Field[float, float | int | str, str, Any]):
@@ -335,9 +335,9 @@ class FloatField(Field[float, float | int | str, str, Any]):
         label: StrOrPromise | None = None,
         help_text: StrOrPromise | None = None,
         style: dict[str, Any] | None = None,
-        error_messages: dict[str, StrOrPromise] | None = None,
-        validators: Sequence[Validator[float]] | None = None,
-        allow_null: bool = False,
+        error_messages: Mapping[str, StrOrPromise] | None = None,
+        validators: Sequence[Validator[float]] | None = ...,
+        allow_null: bool = ...,
     ) -> None: ...
 
 class DecimalField(Field[Decimal, int | float | str | Decimal, str, Any]):
@@ -371,9 +371,9 @@ class DecimalField(Field[Decimal, int | float | str | Decimal, str, Any]):
         label: StrOrPromise | None = None,
         help_text: StrOrPromise | None = None,
         style: dict[str, Any] | None = None,
-        error_messages: dict[str, StrOrPromise] | None = None,
-        validators: Sequence[Validator[Decimal]] | None = None,
-        allow_null: bool = False,
+        error_messages: Mapping[str, StrOrPromise] | None = None,
+        validators: Sequence[Validator[Decimal]] | None = ...,
+        allow_null: bool = ...,
     ) -> None: ...
     def validate_precision(self, value: Decimal) -> Decimal: ...
     def quantize(self, value: Decimal) -> Decimal: ...
@@ -398,9 +398,9 @@ class DateTimeField(Field[datetime.datetime, datetime.datetime | str, str, Any])
         label: StrOrPromise | None = None,
         help_text: StrOrPromise | None = None,
         style: dict[str, Any] | None = None,
-        error_messages: dict[str, StrOrPromise] | None = None,
-        validators: Sequence[Validator[datetime.datetime]] | None = None,
-        allow_null: bool = False,
+        error_messages: Mapping[str, StrOrPromise] | None = None,
+        validators: Sequence[Validator[datetime.datetime]] | None = ...,
+        allow_null: bool = ...,
     ) -> None: ...
     def enforce_timezone(self, value: datetime.datetime) -> datetime.datetime: ...
     def default_timezone(self) -> datetime.tzinfo | None: ...
@@ -425,9 +425,9 @@ class DateField(Field[datetime.date, datetime.date | str, str, Any]):
         label: StrOrPromise | None = None,
         help_text: StrOrPromise | None = None,
         style: dict[str, Any] | None = None,
-        error_messages: dict[str, StrOrPromise] | None = None,
-        validators: Sequence[Validator[datetime.date]] | None = None,
-        allow_null: bool = False,
+        error_messages: Mapping[str, StrOrPromise] | None = None,
+        validators: Sequence[Validator[datetime.date]] | None = ...,
+        allow_null: bool = ...,
     ) -> None: ...
     @override
     def to_internal_value(self, value: datetime.date | str) -> datetime.date: ...
@@ -450,9 +450,9 @@ class TimeField(Field[datetime.time, datetime.time | str, str, Any]):
         label: StrOrPromise | None = None,
         help_text: StrOrPromise | None = None,
         style: dict[str, Any] | None = None,
-        error_messages: dict[str, StrOrPromise] | None = None,
-        validators: Sequence[Validator[datetime.time]] | None = None,
-        allow_null: bool = False,
+        error_messages: Mapping[str, StrOrPromise] | None = None,
+        validators: Sequence[Validator[datetime.time]] | None = ...,
+        allow_null: bool = ...,
     ) -> None: ...
     @override
     def to_internal_value(self, value: datetime.time | str) -> datetime.time: ...
@@ -476,9 +476,9 @@ class DurationField(Field[datetime.timedelta, datetime.timedelta | str, str, Any
         label: StrOrPromise | None = None,
         help_text: StrOrPromise | None = None,
         style: dict[str, Any] | None = None,
-        error_messages: dict[str, StrOrPromise] | None = None,
-        validators: Sequence[Validator[datetime.timedelta]] | None = None,
-        allow_null: bool = False,
+        error_messages: Mapping[str, StrOrPromise] | None = None,
+        validators: Sequence[Validator[datetime.timedelta]] | None = ...,
+        allow_null: bool = ...,
     ) -> None: ...
     @override
     def to_internal_value(self, value: datetime.timedelta | str) -> datetime.timedelta: ...
@@ -503,9 +503,9 @@ class ChoiceField(Field[str, str | int | tuple[str | int, str | int | tuple], st
         label: StrOrPromise | None = None,
         help_text: StrOrPromise | None = None,
         style: dict[str, Any] | None = None,
-        error_messages: dict[str, StrOrPromise] | None = None,
-        validators: Sequence[Validator[Any]] | None = None,
-        allow_null: bool = False,
+        error_messages: Mapping[str, StrOrPromise] | None = None,
+        validators: Sequence[Validator[Any]] | None = ...,
+        allow_null: bool = ...,
         html_cutoff: int = ...,
         html_cutoff_text: StrOrPromise = ...,
         allow_blank: bool = False,
@@ -538,9 +538,9 @@ class MultipleChoiceField(
         label: StrOrPromise | None = None,
         help_text: StrOrPromise | None = None,
         style: dict[str, Any] | None = None,
-        error_messages: dict[str, StrOrPromise] | None = None,
-        validators: Sequence[Validator[Any]] | None = None,
-        allow_null: bool = False,
+        error_messages: Mapping[str, StrOrPromise] | None = None,
+        validators: Sequence[Validator[Any]] | None = ...,
+        allow_null: bool = ...,
         html_cutoff: int = ...,
         html_cutoff_text: StrOrPromise = ...,
         allow_blank: bool = False,
@@ -565,9 +565,9 @@ class FilePathField(ChoiceField):
         label: StrOrPromise | None = None,
         help_text: StrOrPromise | None = None,
         style: dict[str, Any] | None = None,
-        error_messages: dict[str, StrOrPromise] | None = None,
-        validators: Sequence[Validator[Any]] | None = None,
-        allow_null: bool = False,
+        error_messages: Mapping[str, StrOrPromise] | None = None,
+        validators: Sequence[Validator[Any]] | None = ...,
+        allow_null: bool = ...,
         html_cutoff: int = ...,
         html_cutoff_text: StrOrPromise = ...,
         allow_blank: bool = False,
@@ -589,11 +589,11 @@ class FileField(Field[File, File, str | None, Any]):  # this field can return No
         label: StrOrPromise | None = None,
         help_text: StrOrPromise | None = None,
         style: dict[str, Any] | None = None,
-        error_messages: dict[str, StrOrPromise] | None = None,
-        validators: Sequence[Validator[File]] | None = None,
-        allow_null: bool = False,
-        max_length: int | None = None,
-        allow_empty_file: bool = False,
+        error_messages: Mapping[str, StrOrPromise] | None = None,
+        validators: Sequence[Validator[File]] | None = ...,
+        allow_null: bool = ...,
+        max_length: int = ...,
+        allow_empty_file: bool = ...,
         use_url: bool = ...,
     ) -> None: ...
 
@@ -611,11 +611,11 @@ class ImageField(FileField):
         label: StrOrPromise | None = None,
         help_text: StrOrPromise | None = None,
         style: dict[str, Any] | None = None,
-        error_messages: dict[str, StrOrPromise] | None = None,
-        validators: Sequence[Validator[File]] | None = None,
-        allow_null: bool = False,
-        max_length: int | None = None,
-        allow_empty_file: bool = False,
+        error_messages: Mapping[str, StrOrPromise] | None = None,
+        validators: Sequence[Validator[File]] | None = ...,
+        allow_null: bool = ...,
+        max_length: int = ...,
+        allow_empty_file: bool = ...,
         use_url: bool = ...,
         _DjangoImageField: type[SupportsToPython] = ...,
     ) -> None: ...
@@ -642,9 +642,9 @@ class ListField(Field[list[Any], list[Any], list[Any], Any]):
         label: StrOrPromise | None = None,
         help_text: StrOrPromise | None = None,
         style: dict[str, Any] | None = None,
-        error_messages: dict[str, StrOrPromise] | None = None,
-        validators: Sequence[Validator[list[Any]]] | None = None,
-        allow_null: bool = False,
+        error_messages: Mapping[str, StrOrPromise] | None = None,
+        validators: Sequence[Validator[list[Any]]] | None = ...,
+        allow_null: bool = ...,
         child: Field = ...,
         allow_empty: bool = True,
         max_length: int | None = None,
@@ -670,9 +670,9 @@ class DictField(Field[dict[Any, Any], dict[Any, Any], dict[Any, Any], Any]):
         label: StrOrPromise | None = None,
         help_text: StrOrPromise | None = None,
         style: dict[str, Any] | None = None,
-        error_messages: dict[str, StrOrPromise] | None = None,
-        validators: Sequence[Validator[dict[Any, Any]]] | None = None,
-        allow_null: bool = False,
+        error_messages: Mapping[str, StrOrPromise] | None = None,
+        validators: Sequence[Validator[dict[Any, Any]]] | None = ...,
+        allow_null: bool = ...,
         child: Field = ...,
         allow_empty: bool = True,
     ) -> None: ...
@@ -697,12 +697,12 @@ class JSONField(Field[dict[str, Any] | list[dict[str, Any]], dict[str, Any] | li
         label: StrOrPromise | None = None,
         help_text: StrOrPromise | None = None,
         style: dict[str, Any] | None = None,
-        error_messages: dict[str, StrOrPromise] | None = None,
-        validators: Sequence[Validator[Any]] | None = None,
-        allow_null: bool = False,
-        binary: bool = False,
-        encoder: type[JSONEncoder] | None = None,
-        decoder: type[JSONDecoder] | None = None,
+        error_messages: Mapping[str, StrOrPromise] | None = None,
+        validators: Sequence[Validator[Any]] | None = ...,
+        allow_null: bool = ...,
+        binary: bool = ...,
+        encoder: type[JSONEncoder] | None = ...,
+        decoder: type[JSONDecoder] | None = ...,
     ) -> None: ...
 
 class ReadOnlyField(Field): ...
@@ -723,9 +723,9 @@ class SerializerMethodField(Field):
         label: StrOrPromise | None = None,
         help_text: StrOrPromise | None = None,
         style: dict[str, Any] | None = None,
-        error_messages: dict[str, StrOrPromise] | None = None,
-        validators: Sequence[Validator[Any]] | None = None,
-        allow_null: bool = False,
+        error_messages: Mapping[str, StrOrPromise] | None = None,
+        validators: Sequence[Validator[Any]] | None = ...,
+        allow_null: bool = ...,
     ) -> None: ...
 
 class ModelField(Field):
@@ -744,10 +744,10 @@ class ModelField(Field):
         label: StrOrPromise | None = None,
         help_text: StrOrPromise | None = None,
         style: dict[str, Any] | None = None,
-        error_messages: dict[str, StrOrPromise] | None = None,
-        validators: Sequence[Validator[Any]] | None = None,
-        allow_null: bool = False,
-        max_length: int | None = None,
+        error_messages: Mapping[str, StrOrPromise] | None = None,
+        validators: Sequence[Validator[Any]] | None = ...,
+        allow_null: bool = ...,
+        max_length: int = ...,
     ) -> None: ...
     @override
     def get_attribute(self, obj: Any) -> Any: ...  # Any: returns obj unchanged
