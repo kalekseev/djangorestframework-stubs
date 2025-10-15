@@ -1,4 +1,4 @@
-from typing import Any, assert_type
+from typing import Any, TypeVar, assert_type
 
 from django.db.models import Model, QuerySet
 from django.http.request import HttpRequest
@@ -14,10 +14,13 @@ class MyModel(Model):
     pass
 
 
+_Q = TypeVar("_Q", bound=QuerySet[Any, Any])
+
+
 # case: test_view_request_type
 class MyListView(generics.ListAPIView):
     @override
-    def filter_queryset(self, queryset: QuerySet[Any]) -> QuerySet[Any]:
+    def filter_queryset(self, queryset: _Q) -> _Q:
         assert_type(self.request, Request)
         return queryset
 
@@ -56,6 +59,15 @@ my_view: generics.GenericAPIView[MyModel]
 values_qs: QuerySet[MyModel, dict[str, Any]]
 filtered = my_view.filter_queryset(values_qs)
 assert_type(filtered, QuerySet[MyModel, dict[str, Any]])
+
+
+# case: test_filter_queryset_preserves_queryset_subclass
+class MyQuerySet(QuerySet[MyModel]): ...
+
+
+custom_qs: MyQuerySet
+custom_filtered = my_view.filter_queryset(custom_qs)
+assert_type(custom_filtered, MyQuerySet)
 
 # case: test_paginate_queryset_extracts_row_type
 page = my_view.paginate_queryset(values_qs)
