@@ -23,9 +23,8 @@ classifiers = [
   "Framework :: Django",
 ]
 dependencies = [
-  "django-stubs>=5.2.5",
+  "django-stubs-ext>=5.2.5",
   "typing-extensions>=4.0",
-  "requests>=2.0",
   "types-requests",
   "types-PyYAML",
 ]
