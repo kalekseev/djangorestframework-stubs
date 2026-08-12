@@ -1,5 +1,5 @@
 from collections.abc import Callable
-from typing import Any, TypeAlias
+from typing import Any, Concatenate, TypeAlias
 
 from django.http.request import HttpRequest
 from django.http.response import HttpResponseBase
@@ -7,7 +7,8 @@ from rest_framework import generics, mixins, views
 from rest_framework.decorators import ViewSetAction
 from rest_framework.generics import _MT_co
 from rest_framework.request import Request
-from rest_framework.views import AsView, GenericView
+from rest_framework.response import Response
+from rest_framework.views import AsView
 
 def _is_extra_action(attr: Any) -> bool: ...
 
@@ -29,7 +30,7 @@ class ViewSetMixin:
     @classmethod
     def as_view(
         cls, actions: dict[str, str | ViewSetAction] | None = ..., **initkwargs: Any
-    ) -> AsView[GenericView]: ...
+    ) -> AsView[Concatenate[HttpRequest, ...], Response]: ...
     def initialize_request(self, request: HttpRequest, *args: Any, **kwargs: Any) -> Request: ...
     def reverse_action(self, url_name: str, *args: Any, **kwargs: Any) -> str: ...
     @classmethod

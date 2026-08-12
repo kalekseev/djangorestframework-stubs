@@ -1,6 +1,6 @@
 from collections.abc import Callable, Mapping, Sequence
 from http import HTTPMethod
-from typing import Any, Concatenate, Literal, Protocol, TypeAlias, TypeVar, type_check_only
+from typing import Any, Concatenate, Literal, Protocol, Self, TypeAlias, TypeVar, overload, type_check_only
 
 from django.http import HttpRequest
 from django.http.response import HttpResponseBase
@@ -17,10 +17,13 @@ from rest_framework.versioning import BaseVersioning
 from rest_framework.views import APIView, AsView  # noqa: F401
 from typing_extensions import ParamSpec, override
 
-_View = TypeVar("_View", bound=Callable[..., HttpResponseBase])
 _P = ParamSpec("_P")
+_Owner = TypeVar("_Owner")
+_Owner_contra = TypeVar("_Owner_contra", contravariant=True)
 _RESP = TypeVar("_RESP", bound=HttpResponseBase)
+_RESP_co = TypeVar("_RESP_co", bound=HttpResponseBase, covariant=True)
 _REQ = TypeVar("_REQ", bound=Request)
+_View = TypeVar("_View", bound=Callable[..., HttpResponseBase])
 
 _MixedCaseHttpMethod: TypeAlias = Literal[
     "GET",
@@ -57,18 +60,24 @@ class MethodMapper(dict):
     def trace(self, func: _View) -> _View: ...
 
 @type_check_only
-class ViewSetAction(Protocol[_View]):
+class ViewSetAction(Protocol[_Owner_contra, _P, _RESP_co]):
     detail: bool
     url_path: str
     url_name: str
     kwargs: Mapping[str, Any]
     mapping: MethodMapper
-    __call__: _View
+    def __call__(self, instance: _Owner_contra, /, *args: _P.args, **kwargs: _P.kwargs) -> _RESP_co: ...
+    @overload
+    def __get__(self, instance: None, owner: type[Any], /) -> Self: ...
+    @overload
+    def __get__(
+        self, instance: _Owner_contra, owner: type[_Owner_contra] | None = ..., /
+    ) -> Callable[_P, _RESP_co]: ...
     __name__: str
 
 def api_view(
     http_method_names: Sequence[str] | None = ...,
-) -> Callable[[Callable[Concatenate[_REQ, _P], _RESP]], AsView[Callable[Concatenate[HttpRequest, _P], _RESP]]]: ...
+) -> Callable[[Callable[Concatenate[_REQ, _P], _RESP]], AsView[Concatenate[HttpRequest, _P], _RESP]]: ...
 def renderer_classes(renderer_classes: Sequence[BaseRenderer | type[BaseRenderer]]) -> Callable[[_View], _View]: ...
 def parser_classes(parser_classes: Sequence[BaseParser | type[BaseParser]]) -> Callable[[_View], _View]: ...
 def authentication_classes(
@@ -89,4 +98,4 @@ def action(
     suffix: str | None = ...,
     name: str | None = ...,
     **kwargs: Any,
-) -> Callable[[_View], ViewSetAction[_View]]: ...
+) -> Callable[[Callable[Concatenate[_Owner, _P], _RESP]], ViewSetAction[_Owner, _P, _RESP]]: ...
