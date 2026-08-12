@@ -1,12 +1,11 @@
 # case: api_view
 import sys
-from collections.abc import Callable
 from typing import Any
 
 from django.http import HttpRequest
 from mypy_extensions import Arg
 from rest_framework import viewsets
-from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.decorators import ViewSetAction, action, api_view, permission_classes
 from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -20,7 +19,7 @@ def view_func1(request: Any) -> Any: ...
 
 
 view_func1(HttpRequest())
-assert_type(view_func1, AsView[Callable[[HttpRequest], Any]])
+assert_type(view_func1, AsView[[HttpRequest], Any])
 assert_type(view_func1(HttpRequest()), Any)
 
 
@@ -31,7 +30,7 @@ def view_func2(request: Request, arg: str) -> Response: ...
 
 view_func2(HttpRequest(), "test")
 view_func2(HttpRequest(), arg="test")
-assert_type(view_func2, AsView[Callable[[HttpRequest, Arg(str, "arg")], Response]])
+assert_type(view_func2, AsView[[HttpRequest, Arg(str, "arg")], Response])
 assert_type(view_func2(HttpRequest(), "test"), Response)
 
 
@@ -53,6 +52,11 @@ class MyView(viewsets.ViewSet):
     def view_func_2(self, request: Request) -> Response: ...
     @action(methods=("GET",), detail=False)
     def view_func_3(self, request: Request) -> Response: ...
+
+
+assert_type(MyView.view_func_1, ViewSetAction[MyView, [Arg(Request, "request")], Response])
+request: Request
+assert_type(MyView().view_func_1(request), Response)
 
 
 # case: method_decorator_http_libary

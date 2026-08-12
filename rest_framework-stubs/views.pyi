@@ -1,5 +1,5 @@
 from collections.abc import Callable, Mapping, Sequence
-from typing import Any, NoReturn, Protocol, TypeVar
+from typing import Any, Concatenate, NoReturn, Protocol, TypeVar
 
 from django.http import HttpRequest
 from django.http.response import HttpResponseBase
@@ -16,21 +16,22 @@ from rest_framework.schemas.inspectors import ViewInspector
 from rest_framework.settings import APISettings
 from rest_framework.throttling import BaseThrottle
 from rest_framework.versioning import BaseVersioning
-from typing_extensions import override
+from typing_extensions import ParamSpec, override
 
 def get_view_name(view: APIView) -> str: ...
 def get_view_description(view: APIView, html: bool = ...) -> str: ...
 def set_rollback() -> None: ...
 def exception_handler(exc: Exception, context: dict[str, Any]) -> Response | None: ...
 
-_View = TypeVar("_View", bound=Callable[..., HttpResponseBase])
+_P = ParamSpec("_P")
+_Response_co = TypeVar("_Response_co", bound=HttpResponseBase, covariant=True)
 
-class AsView(Protocol[_View]):
+class AsView(Protocol[_P, _Response_co]):
     cls: type[APIView]
     view_class: type[APIView]
     view_initkwargs: Mapping[str, Any]
     csrf_exempt: bool
-    __call__: _View
+    def __call__(self, *args: _P.args, **kwargs: _P.kwargs) -> _Response_co: ...
 
 # Call signature for view function that's returned by as_view()
 class GenericView(Protocol):
@@ -59,7 +60,7 @@ class APIView(View):
     def default_response_headers(self) -> dict[str, str]: ...
     @classmethod
     @override
-    def as_view(cls, **initkwargs: Any) -> AsView[GenericView]: ...
+    def as_view(cls, **initkwargs: Any) -> AsView[Concatenate[HttpRequest, ...], Response]: ...
     @override
     def http_method_not_allowed(self, request: Request, *args: Any, **kwargs: Any) -> Response: ...  # type: ignore[override]
     def permission_denied(self, request: Request, message: str | None = ..., code: str | None = ...) -> NoReturn: ...
