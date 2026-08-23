@@ -107,6 +107,11 @@ class TestSerializer6(serializers.Serializer):
         assert_type(ret, ReturnList[str])
 
 
+# case: list_serializer_errors_are_indexed
+list_serializer: serializers.ListSerializer[Any] = serializers.ListSerializer(child=TestSerializer6())
+assert_type(list_serializer.errors, ReturnDict[int | str, Any])
+
+
 # case: test_return_list_reduce
 class TestSerializer7(serializers.Serializer):
     def test(self) -> None:
