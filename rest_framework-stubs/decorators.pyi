@@ -1,6 +1,18 @@
 from collections.abc import Callable, Mapping, Sequence
 from http import HTTPMethod
-from typing import Any, Concatenate, Literal, Protocol, Self, TypeAlias, TypeVar, overload, type_check_only
+from typing import (
+    Any,
+    Concatenate,
+    Literal,
+    Never,
+    Protocol,
+    Self,
+    TypeAlias,
+    TypeGuard,
+    TypeVar,
+    overload,
+    type_check_only,
+)
 
 from django.http import HttpRequest
 from django.http.response import HttpResponseBase
@@ -14,7 +26,7 @@ from rest_framework.request import Request
 from rest_framework.schemas.inspectors import ViewInspector
 from rest_framework.throttling import BaseThrottle
 from rest_framework.versioning import BaseVersioning
-from rest_framework.views import APIView, AsView  # noqa: F401
+from rest_framework.views import APIView, AsView
 from typing_extensions import ParamSpec, override
 
 _P = ParamSpec("_P")
@@ -22,6 +34,8 @@ _Owner = TypeVar("_Owner")
 _Owner_contra = TypeVar("_Owner_contra", contravariant=True)
 _RESP = TypeVar("_RESP", bound=HttpResponseBase)
 _RESP_co = TypeVar("_RESP_co", bound=HttpResponseBase, covariant=True)
+_NARROWED_REQ = TypeVar("_NARROWED_REQ", bound=Request)
+_NARROWED_REQ_co = TypeVar("_NARROWED_REQ_co", bound=Request, covariant=True)
 _View = TypeVar("_View", bound=Callable[..., HttpResponseBase])
 
 _MixedCaseHttpMethod: TypeAlias = Literal[
@@ -83,6 +97,29 @@ def authentication_classes(
     authentication_classes: Sequence[BaseAuthentication | type[BaseAuthentication]],
 ) -> Callable[[_View], _View]: ...
 def throttle_classes(throttle_classes: Sequence[BaseThrottle | type[BaseThrottle]]) -> Callable[[_View], _View]: ...
+
+@type_check_only
+class _SupportsNarrowingPermission(Protocol[_NARROWED_REQ_co]):
+    """A permission whose granted ``has_permission`` guarantees a narrower request type.
+
+    Declare it by annotating ``has_permission`` with ``TypeGuard``::
+
+        class IsCustomer(BasePermission):
+            def has_permission(self, request: Request, view: APIView) -> TypeGuard[CustomerRequest]: ...
+    """
+
+    def has_permission(self, request: Request, view: APIView, /) -> TypeGuard[_NARROWED_REQ_co]: ...
+
+# A view may annotate its request with the type the permission narrows to.
+# The decorated view then accepts a plain `Request` again, so `api_view` accepts it,
+# while a view that claims a narrower request without a matching permission is rejected.
+@overload
+def permission_classes(permission_classes: Sequence[Never]) -> Callable[[_View], _View]: ...
+@overload
+def permission_classes(
+    permission_classes: Sequence[type[_SupportsNarrowingPermission[_NARROWED_REQ]]],
+) -> Callable[[Callable[Concatenate[_NARROWED_REQ, _P], _RESP]], Callable[Concatenate[Request, _P], _RESP]]: ...
+@overload
 def permission_classes(permission_classes: Sequence[_PermissionClass]) -> Callable[[_View], _View]: ...
 def content_negotiation_class(content_negotiation_class: type[BaseContentNegotiation]) -> Callable[[_View], _View]: ...
 def metadata_class(metadata_class: type[BaseMetadata] | None) -> Callable[[_View], _View]: ...
